@@ -1,0 +1,48 @@
+name: "Setup Node and pnpm"
+description: "Install Node, pnpm and dependencies with caching"
+inputs:
+  working-directory:
+    description: "Directory to run install in"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: setup node
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+
+    - name: resolve pnpm version from packageManager
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        PM_FIELD="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json','utf8')).packageManager || ''")"
+        PNPM_VERSION="${PM_FIELD#pnpm@}"
+        if [[ -z "$PNPM_VERSION" || "$PNPM_VERSION" == "$PM_FIELD" ]]; then
+          echo "packageManager must contain pnpm@<version>, got: '$PM_FIELD'" >&2
+          exit 1
+        fi
+        echo "PNPM_VERSION=$PNPM_VERSION" >> "$GITHUB_ENV"
+
+    - name: setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: install
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: pnpm install --no-frozen-lockfile
