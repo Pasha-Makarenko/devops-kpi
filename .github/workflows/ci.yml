@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup node and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          working-directory: .
+
+      - name: code style check
+        working-directory: .
+        run: pnpm run lint:check
+
+      - name: unit tests
+        working-directory: .
+        run: pnpm run test:unit
+
+      - name: integration tests
+        working-directory: .
+        run: pnpm run test:integration
