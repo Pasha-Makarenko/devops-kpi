@@ -109,3 +109,40 @@ sudo systemctl status mywebapp
 sudo systemctl restart mywebapp
 sudo systemctl reload nginx
 ```
+
+## Docker Compose (ЛР2)
+
+У проєкті додано контейнеризацію трьох сервісів з ЛР1:
+
+- `web` (Node.js застосунок з автоматичним запуском міграцій)
+- `db` (MariaDB з персистентним volume)
+- `nginx` (reverse proxy)
+
+Запуск:
+
+```bash
+docker compose up -d --build
+```
+
+Зупинка:
+
+```bash
+docker compose down
+```
+
+Перевірка стану:
+
+```bash
+docker compose ps
+docker compose logs -f web
+docker compose logs -f nginx
+```
+
+Порти та мережа:
+
+- зовнішній доступ: `http://localhost:8080`
+- внутрішній порт web: `5200`
+- custom network: `mywebapp-net`
+- volume БД: `mywebapp-db-data` (дані переживають `down/up`)
+
+Детальний звіт по ЛР2 (дослідницька + практична частини): [`docs/lab2-report.md`](docs/lab2-report.md)
