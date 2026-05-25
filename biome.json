@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!experiments/lab2"]
+		"includes": ["**", "!experiments/lab2", "!coverage"]
 	},
 	"formatter": {
 		"enabled": true,

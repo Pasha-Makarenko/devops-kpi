@@ -3,3 +3,4 @@
 /.vagrant
 /.pnpm-store
 **/node_modules
+/coverage
