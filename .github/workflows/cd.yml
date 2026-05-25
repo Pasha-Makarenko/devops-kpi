@@ -1,0 +1,56 @@
+name: CD
+
+on:
+  push:
+    tags: ["*"]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy
+    runs-on: [self-hosted, linux, deploy]
+    needs: [ci]
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve image reference
+        id: image
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          repo="${GITHUB_REPOSITORY,,}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${repo}:${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Deploy to target node
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: bash scripts/cd-remote-deploy.sh "${{ steps.image.outputs.image }}"
+
+      - name: Verify deployment
+        env:
+          VERIFY_BASE_URL: ${{ secrets.DEPLOY_BASE_URL }}
+        run: bash scripts/verify-deployment.sh "$VERIFY_BASE_URL"
