@@ -2,7 +2,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [[ -f /vagrant/deploy/deployment.defaults ]]; then
+	REPO_ROOT=/vagrant
+elif [[ -f "$SCRIPT_DIR/../deploy/deployment.defaults" ]]; then
+	REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+	echo "Cannot find repo (deploy/deployment.defaults)" >&2
+	exit 1
+fi
 source "$REPO_ROOT/deploy/deployment.defaults"
 
 export DEBIAN_FRONTEND=noninteractive
