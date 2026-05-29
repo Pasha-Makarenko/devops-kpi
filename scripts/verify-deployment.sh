@@ -2,6 +2,28 @@
 set -euo pipefail
 
 BASE_URL="${1:?usage: verify-deployment.sh <base-url e.g. http://192.168.56.10>}"
+MAX_ATTEMPTS="${VERIFY_RETRIES:-30}"
+RETRY_DELAY="${VERIFY_RETRY_DELAY:-2}"
+
+wait_for_url() {
+	local url="$1"
+	local attempt=1
+	while [[ "$attempt" -le "$MAX_ATTEMPTS" ]]; do
+		if curl -sfS -o /dev/null "$url"; then
+			return 0
+		fi
+		echo "Waiting for ${url} (attempt ${attempt}/${MAX_ATTEMPTS})..."
+		sleep "$RETRY_DELAY"
+		attempt=$((attempt + 1))
+	done
+	return 1
+}
+
+echo "==> Wait for service availability"
+wait_for_url "$BASE_URL/" || {
+	echo "Service not available at $BASE_URL after $((MAX_ATTEMPTS * RETRY_DELAY))s" >&2
+	exit 1
+}
 
 echo "==> GET / (html)"
 curl -sfS -H "Accept: text/html" "$BASE_URL/" | grep -qi '<html\|<table\|DOCTYPE\|endpoint' || {
