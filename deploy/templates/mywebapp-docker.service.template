@@ -1,0 +1,21 @@
+[Unit]
+Description=mywebapp application (Docker)
+Documentation=file:///opt/mywebapp/README.md
+After=docker.service mariadb.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/mywebapp/docker-app.env
+EnvironmentFile=/etc/mywebapp/docker-image.env
+ExecStartPre=-/usr/bin/docker stop mywebapp-web
+ExecStartPre=-/usr/bin/docker rm mywebapp-web
+ExecStartPre=/usr/bin/docker pull ${DOCKER_IMAGE}
+ExecStart=/usr/bin/docker run --name mywebapp-web --network host -e NODE_ENV=${NODE_ENV} -e APP_PORT=${APP_PORT} -e DB_HOST=${DB_HOST} -e DB_PORT=${DB_PORT} -e DB_USER=${DB_USER} -e DB_PASSWORD=${DB_PASSWORD} -e DB_NAME=${DB_NAME} ${DOCKER_IMAGE}
+ExecStop=/usr/bin/docker stop mywebapp-web
+Restart=always
+RestartSec=5
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

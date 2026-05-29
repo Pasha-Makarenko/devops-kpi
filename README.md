@@ -146,3 +146,18 @@ docker compose logs -f nginx
 - volume БД: `mywebapp-db-data` (дані переживають `down/up`)
 
 Детальний звіт по ЛР2 (дослідницька + практична частини): [`docs/lab2-report.md`](docs/lab2-report.md)
+
+## CI/CD (ЛР3)
+
+Pipeline: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (lint, test, build) та [`.github/workflows/cd.yml`](.github/workflows/cd.yml) (deploy на tag).
+
+- **Lint** — Biome, Shellcheck, Hadolint, Yamllint
+- **Test** — unit/integration + покриття ≥ 40% (c8)
+- **Build** — Docker-образ у GHCR (`latest`/`sha-*` на main, `stable`/`<tag>` на тег)
+- **Deploy** — self-hosted runner → SSH на target node → verify
+
+Target node (Docker + systemd + nginx):
+
+```bash
+sudo DEPLOY_GHCR_IMAGE=ghcr.io/pasha-makarenko/devops-kpi:latest bash scripts/provision-docker-target.sh
+```
