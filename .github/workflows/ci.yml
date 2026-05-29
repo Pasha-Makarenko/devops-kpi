@@ -40,7 +40,8 @@ jobs:
         uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: scripts
-          additionalfiles: deploy/launch-mywebapp.sh scripts/docker-entrypoint.sh
+          additional_files: deploy/launch-mywebapp.sh scripts/docker-entrypoint.sh
+          severity: error
 
       - name: Hadolint (Dockerfile)
         uses: hadolint/hadolint-action@v3.1.0
