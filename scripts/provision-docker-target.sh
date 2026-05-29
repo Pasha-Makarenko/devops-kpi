@@ -64,9 +64,11 @@ echo "operator ALL=(root) NOPASSWD: /bin/systemctl start mywebapp-docker, /bin/s
 chmod 440 /etc/sudoers.d/operator-mywebapp-docker
 
 echo "==> MariaDB"
+systemctl enable mariadb
 systemctl start mariadb || true
 mysql -e "CREATE DATABASE IF NOT EXISTS ${DEPLOY_DB_NAME};"
 mysql -e "CREATE USER IF NOT EXISTS '${DEPLOY_DB_USER}'@'127.0.0.1' IDENTIFIED BY '${DB_PASSWORD}';"
+mysql -e "ALTER USER '${DEPLOY_DB_USER}'@'127.0.0.1' IDENTIFIED BY '${DB_PASSWORD}';"
 mysql -e "GRANT ALL PRIVILEGES ON ${DEPLOY_DB_NAME}.* TO '${DEPLOY_DB_USER}'@'127.0.0.1'; FLUSH PRIVILEGES;"
 
 echo "==> App dir (for documentation / launch if needed)"
